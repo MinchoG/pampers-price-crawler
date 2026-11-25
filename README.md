@@ -18,10 +18,8 @@ Care in sizes 0–8. Selecting a size reads the same snapshot for every visitor.
 To refresh locally from the installed environment, run
 `python -m pampers_prices.snapshot` from the repository root. Serve it with
 `python -m http.server 8080 --directory diaperhunt` and open localhost:8080.
-The GitHub Actions workflow refreshes daily at 04:17 UTC or on manual dispatch.
-Configure repository secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`
-for deployment to the configured custom domain. The account needs access to
-the mincho.dev zone and authorization to deploy Workers and custom domains.
+The production site uses a separate private repository for its daily refresh
+and deployment. The bundled snapshot lets you preview this public version locally.
 The CLI below also supports your own keywords and retailer URLs.
 
 ### Double-click price check (Mac and Windows)
