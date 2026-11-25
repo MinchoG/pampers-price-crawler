@@ -65,7 +65,11 @@ def listing_offer(link, title, amount):
     return None
 
 
-def verify(soup, args):
+def verify(soup, args, page_url):
+    heading = soup.select_one("h1")
+    heading_text = " ".join(heading.stripped_strings).casefold() if heading else ""
+    def page_key(url):
+        return urldefrag(urljoin(page_url, url)).url.rstrip("/")
     for product in _jsonld_items(soup):
         if product.get("@type") != "Product":
             continue
@@ -76,6 +80,12 @@ def verify(soup, args):
         offers = product.get("offers", [])
         for offer in offers if isinstance(offers, list) else [offers]:
             if not isinstance(offer, dict) or str(offer.get("availability", "")).split("/")[-1] != "InStock":
+                continue
+            urls = [u for u in (product.get("url"), offer.get("url")) if isinstance(u, str) and u]
+            if urls:
+                if any(page_key(u) != page_key(page_url) for u in urls):
+                    continue
+            elif " ".join(title.split()).casefold() != heading_text:
                 continue
             price = parse_decimal(str(offer.get("price", "")))
             if price and price.is_finite() and price > 0 and offer.get("priceCurrency") == "EUR":
@@ -181,7 +191,7 @@ async def scan(browser, store, args):
                 rows.append((*listings[url], store.name, url, sources))
                 continue
             try:
-                matches = list(verify(await read(page, url), args))
+                matches = list(verify(await read(page, url), args, page.url))
                 if matches:
                     rows.append((*min(matches), store.name, url, sources))
                 else:
@@ -263,7 +273,7 @@ async def web_report(browser, args):
                 if args.google:
                     messages.append(f"Google organic result — {url}")
                 try:
-                    matches = list(verify(await read(page, url), args))
+                    matches = list(verify(await read(page, url), args, page.url))
                     if matches:
                         host = urlsplit(url).hostname
                         name = next((s.name for s in STORES if urlsplit(s.base_url).hostname.removeprefix("www.") == host.removeprefix("www.")), host)
