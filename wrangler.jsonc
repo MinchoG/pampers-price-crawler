@@ -1,0 +1,7 @@
+{
+  "name": "diaperhunt",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./diaperhunt" },
+  "workers_dev": false,
+  "routes": [{ "pattern": "diaperhunt.mincho.dev", "custom_domain": true }]
+}

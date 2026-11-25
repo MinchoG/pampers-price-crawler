@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diaperhunt · Pampers Premium Care</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f8fc;color:#142e46;font:1rem/1.55 system-ui,sans-serif}header,main{max-width:1050px;margin:auto;padding:1.5rem}header{font-size:1.45rem;font-weight:800;color:#166963;border-bottom:1px solid #cedde2}h1{font-size:clamp(2.4rem,6vw,4.5rem);letter-spacing:-.055em;line-height:1.03;margin:.6em 0 .3em}p{color:#415567}#tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem}button{font:inherit;cursor:pointer;text-align:left;color:inherit;background:white;padding:1rem;border:1px solid #c7d8de;border-radius:.9rem}button strong,button small{display:block}button[aria-pressed=true]{background:#164b52;color:white}button small{font-size:.9rem}ol{padding-left:2.5rem}li{background:white;border-bottom:1px solid #d9e3eb;padding:1rem}a{color:#116963;font-weight:650}#date{font-size:.95rem}footer{margin:2rem 0}
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121b2e;--text:#e7ecf5;--muted:#93a1bd;--accent:#37d67a;--line:#22314f}
+body{background:var(--bg);color:var(--text);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+header,main,aside{max-width:760px;margin:auto;padding:0 20px}
+header{display:flex;align-items:center;justify-content:space-between;padding-top:40px;margin-bottom:36px;color:var(--muted);font-size:.9rem;font-weight:400;border:0}
+header a{color:var(--text);font-weight:700}
+h1{font-size:clamp(2rem,6vw,3rem);letter-spacing:-.025em}
+p,aside,button small{color:var(--muted)}
+#tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+button{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.85rem}
+button:hover,button[aria-pressed=true]{background:var(--panel);border-color:var(--accent);color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+ol{padding-left:2rem}li{background:transparent;border-color:var(--line);padding:.8rem 0}
+li::marker{color:var(--muted)}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+aside{border-top:1px solid var(--line);padding-top:1rem;padding-bottom:3rem;font-size:.9rem}
+@media(max-width:440px){#tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<header>Diaperhunt</header><main><h1>Pampers Premium Care</h1><p>Bulgaria · Compare packs by price per diaper, before delivery.</p><p id="date">Loading latest prices…</p><section id="tiles" aria-label="Diaper sizes"></section><section aria-live="polite"><h2 id="heading"></h2><ol id="offers"></ol></section><footer><details><summary>Stores checked</summary><p id="stores"></p></details></footer></main>
+<aside>Diaperhunt can make mistakes. Check the pack size, price and availability on the retailer’s website before ordering. No retailer or other website funds the creator of Diaperhunt.</aside>
+<script type="module">
+const get=id=>document.getElementById(id);
+const euro=(n,d)=>'€'+n.toFixed(d);
+try {
+ const r=await fetch('offers.json'); if(!r.ok)throw Error();
+ const data=await r.json();
+ get('date').textContent='Last checked '+new Date(data.updated).toLocaleString();
+ get('stores').textContent=data.stores.join(' · ');
+ function select(size){
+  const rows=data.sizes[size];get('heading').textContent='Size '+size+' · '+(rows.length?rows.length+' ranked offers':'No verified offers');
+  get('offers').replaceChildren();
+  for(const o of rows){const li=document.createElement('li'),a=document.createElement('a');a.href=o.url;a.textContent=o.store+' · '+o.title;li.append(a,document.createElement('br'),euro(o.price,2)+' / '+o.pieces+' diapers = '+euro(o.unit,4)+' per diaper');get('offers').append(li)}
+  for(const b of get('tiles').children)b.setAttribute('aria-pressed',String(b.dataset.size===size));
+ }
+ for(const [size,rows] of Object.entries(data.sizes)){const b=document.createElement('button');b.dataset.size=size;const title=document.createElement('strong'),price=document.createElement('small');title.textContent='Size '+size;price.textContent=rows.length?euro(rows[0].unit,4)+' / diaper':'No verified offers';b.append(title,price);b.onclick=()=>select(size);get('tiles').append(b)}
+ select('1');
+}catch{get('date').textContent='Price snapshot unavailable. Please check again later.'}
+</script></html>

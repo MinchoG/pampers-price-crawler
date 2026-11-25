@@ -1,0 +1,37 @@
+name: Refresh Diaperhunt
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 4 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: diaperhunt-refresh
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e . && playwright install --with-deps chromium
+      - run: python -m pampers_prices.snapshot
+      - name: Save refreshed prices
+        uses: actions/upload-artifact@v4
+        with:
+          name: diaperhunt-snapshot
+          path: diaperhunt/offers.json
+          retention-days: 7
+      - name: Publish static site
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::warning::Snapshot saved. Configure Cloudflare credentials for deployment."
+            exit 0
+          fi
+          npx --yes wrangler@4.92.0 deploy
